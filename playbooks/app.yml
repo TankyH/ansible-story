@@ -1,0 +1,40 @@
+---
+- hosts: web
+  become: true
+
+  vars:
+    app_name: arwen.space
+    repo_url: https://github.com/ArwenChan/story_pieces_backend
+    repo_remote: origin
+    repo_name: master
+    webapps_dir: /srv/www/{{ app_name }}/backend
+    env_dir: /srv/www/{{ app_name }}/env
+    python3_path: /usr/local/bin/python3.6
+
+  tasks:
+    - name: git pull project
+      git: repo={{ repo_url }} dest={{ webapps_dir }} version={{ repo_name }}
+    
+    - name: install virtualenv
+      pip: name=virtualenv
+
+    - name: create virtualenv
+      command: virtualenv {{ env_dir }} -p {{ python3_path }}
+      ignore_errors: yes
+
+    - name: activate virtualenv
+      command: /bin/bash {{ env_dir }}/bin/activate
+
+    # - pip:
+    #   requirements: {{ webapps_dir }}/requirements.txt
+
+    - name: pip install
+      command: "{{ env_dir }}/bin/pip install -r {{ webapps_dir }}/requirements.txt"
+
+    - name: migrate
+      command: "{{ env_dir }}/bin/python manage.py migrate"
+      args:
+        chdir: "{{ webapps_dir }}"
+
+    - name: restart supervisor
+      supervisorctl: name="story:" state=restarted

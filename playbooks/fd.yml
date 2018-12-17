@@ -1,0 +1,30 @@
+---
+- hosts: web
+  become: true
+
+  vars:
+    app_name: arwen.space
+    repo_url: https://github.com/ArwenChan/story_pieces
+    repo_remote: origin
+    repo_name: master
+    webapps_dir: /srv/www/{{ app_name }}/frontend
+    yarn_path: /home/ubuntu/.nvm/versions/node/v8.12.0/bin/yarn
+    npm_path: /home/ubuntu/.nvm/versions/node/v8.12.0/bin/npm
+
+  tasks:
+    - name: git pull project
+      git: repo={{ repo_url }} dest={{ webapps_dir }} version={{ repo_name }}
+
+    - name: ln node
+      shell: ln -s /home/ubuntu/.nvm/versions/node/v8.12.0/bin/node /usr/bin/node
+      ignore_errors: yes
+
+    - name: yarn install
+      shell: "{{ yarn_path }} install"
+      args:
+        chdir: "{{ webapps_dir }}"    
+
+    - name: npm run build
+      command: "{{ npm_path }} run build"
+      args:
+        chdir: "{{ webapps_dir }}"

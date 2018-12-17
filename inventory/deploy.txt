@@ -1,0 +1,4 @@
+[controller]
+control ansible_connection=local
+[web]
+qcloud ansible_user=ubuntu
